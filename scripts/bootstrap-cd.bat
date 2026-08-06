@@ -3,7 +3,7 @@ setlocal EnableExtensions DisableDelayedExpansion
 chcp 65001 >nul
 
 if "%~1"=="" (
-  echo 사용법: %~nx0 GitHub_ID\tf-k8s-cd [tf-k8s-ci\infra 경로]
+  echo 사용법: %~nx0 GitHub_ID\tf-k8s-cd [devops_tf_k8s_ci\infra 경로]
   exit /b 1
 )
 
@@ -18,7 +18,7 @@ if "%~2"=="" (
   if defined CI_INFRA_DIR (
     set "CI_INFRA_DIR=%CI_INFRA_DIR%"
   ) else (
-    set "CI_INFRA_DIR=%ROOT_DIR%\..\tf-k8s-ci\infra"
+    set "CI_INFRA_DIR=%ROOT_DIR%\..\devops_tf_k8s_ci\infra"
   )
 ) else (
   set "CI_INFRA_DIR=%~2"
@@ -28,7 +28,7 @@ for %%I in ("%CI_INFRA_DIR%") do set "CI_INFRA_DIR=%%~fI"
 
 set "CD_REPO_URL=https://github.com/%CD_REPOSITORY%.git"
 if not defined INITIAL_IMAGE_TAG set "INITIAL_IMAGE_TAG=dev-latest"
-if not defined APP_NAMESPACE set "APP_NAMESPACE=de-ai-25"
+if not defined APP_NAMESPACE set "APP_NAMESPACE=de-ai-05"
 if not defined AUTO_PUSH set "AUTO_PUSH=true"
 
 call "%ROOT_DIR%\scripts\configure-manifests.bat" "%CI_INFRA_DIR%" "%INITIAL_IMAGE_TAG%"

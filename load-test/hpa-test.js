@@ -3,7 +3,7 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 
 // TARGET_URL은 실행 스크립트에서 환경변수로 전달한다.
-// 예: http://example-alb.ap-northeast-2.elb.amazonaws.com/api/cpu
+// 예: http://example-alb.us-east-2.elb.amazonaws.com/api/cpu
 const targetUrl = __ENV.TARGET_URL;
 
 // 환경변수가 없으면 잘못된 주소로 테스트하는 것을 방지하기 위해 즉시 실패시킨다.
@@ -31,7 +31,7 @@ export default function () {
   // 캐시 영향을 줄이고 요청을 구분하기 위해 timestamp query parameter를 추가한다.
   const response = http.get(`${targetUrl}?t=${Date.now()}`, {
     // 서버 연결을 재사용해 실제 연속 트래픽에 가까운 패턴을 만든다.
-    headers: { 'User-Agent': 'de-ai-25-k6-hpa-test' },
+    headers: { 'User-Agent': 'de-ai-05-k6-hpa-test' },
     // 단일 요청이 장시간 대기하지 않도록 timeout을 설정한다.
     timeout: '10s',
   });
