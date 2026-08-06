@@ -142,21 +142,20 @@ tf-k8s-cd/
 ```
   # 태그 확인 - `dev-latest, 해시값 확인`
   # --repository-name 뒷값 본인것으로 수정후 테스트함
-  aws ecr describe-images  --repository-name "de-ai-07-eks-auto-dev/web"  --image-ids imageTag=dev-latest  --region us-east-2  --query 
-  "imageDetails[0].imageTags"  --output json
+  aws ecr describe-images  --repository-name "de-ai-07-eks-auto-dev/web"  --image-ids imageTag=dev-latest  --region us-east-2  --query "imageDetails[0].imageTags"  --output json
     aws ecr describe-images  --repository-name "de-ai-07-eks-auto-dev/web" --region us-east-2 --output json
   ---
-  [                                                                                                          
-    "dev-latest",
-    "5f68fff31524"
-  ] 
+[
+    "5e1450997df9",
+    "dev-latest"
+]
   
   aws ecr describe-images  --repository-name "de-ai-07-eks-auto-dev/was"  --image-ids imageTag=dev-latest  --region us-east-2  --query "imageDetails[0].imageTags"  --output json
   ---
-  [                                                                                                          
-    "5f68fff31524",
-    "dev-latest"
-  ]
+[
+    "dev-latest",
+    "5e1450997df9"
+]
 ```
 
 ```
@@ -262,3 +261,11 @@ gh variable set CD_REPOSITORY --repo hosose/devops_tf_k8s_ci --body "hosose/devo
 gh auth token | gh secret set CD_REPOSITORY_TOKEN --repo hosose/devops_tf_k8s_ci          
 ✓ Set Actions secret CD_REPOSITORY_TOKEN for hosose/devops_tf_k8s_ci
 ```      
+
+- sad
+```
+.\scripts\open-argocd.bat                                                                                                                                
+Argo CD URL      : https://localhost:8080
+Argo CD Username : admin
+Argo CD Password : eWKIVnKErJISx7Uo
+```
