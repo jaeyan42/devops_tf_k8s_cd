@@ -142,17 +142,19 @@ tf-k8s-cd/
 ```
   # 태그 확인 - `dev-latest, 해시값 확인`
   # --repository-name 뒷값 본인것으로 수정후 테스트함
-  aws ecr describe-images  --repository-name "de-ai-25-devops-tf-eks-auto-dev/web"  --image-ids imageTag=dev-latest  --region ap-northeast-2  --query "imageDetails[0].imageTags"  --output json
+  aws ecr describe-images  --repository-name "de-ai-07-eks-auto-dev/web"  --image-ids imageTag=dev-latest  --region us-east-2  --query 
+  "imageDetails[0].imageTags"  --output json
+    aws ecr describe-images  --repository-name "de-ai-07-eks-auto-dev/web" --region us-east-2 --output json
   ---
   [                                                                                                          
     "dev-latest",
-    "d8b623986184"
+    "5f68fff31524"
   ] 
   
-  aws ecr describe-images  --repository-name "de-ai-25-devops-tf-eks-auto-dev/was"  --image-ids imageTag=dev-latest  --region ap-northeast-2  --query "imageDetails[0].imageTags"  --output json
+  aws ecr describe-images  --repository-name "de-ai-07-eks-auto-dev/was"  --image-ids imageTag=dev-latest  --region us-east-2  --query "imageDetails[0].imageTags"  --output json
   ---
   [                                                                                                          
-    "d8b623986184",
+    "5f68fff31524",
     "dev-latest"
   ]
 ```
@@ -173,3 +175,90 @@ tf-k8s-cd/
   # github actions 잘 작동되는지 점검
   validate.yml = 주석 `체크` 문구 추가
 ```
+
+- 로컬 PC의 kubectl과 EKS 클러스터 연결
+  ```
+    # EKS 클러스터명 조회 (리전 수정)
+    aws eks list-clusters  --region us-east-2  --output table
+    ---
+    ---------------------------------------
+    |            ListClusters             |
+    +-------------------------------------+
+    ||             clusters              ||
+    |+-----------------------------------+|
+    ||  de-ai-05-devops-tf-eks-auto-dev  ||
+    ||  de-ai-07-eks-auto-dev            ||
+    ||  de-ai-08-devops-tf-eks-auto-dev  ||
+    |+-----------------------------------+|
+
+    # 연결 (클러스터명 교체)
+    aws eks update-kubeconfig --region us-east-2 --name de-ai-07-eks-auto-dev
+  ```
+
+- Argo CD 설치
+```
+  # 설치
+  .\scripts\bootstrap-cd.bat hosose/devops_tf_k8s_cd
+  # Argo CD 상태 확인 - Argo CD 파트 확인
+  kubectl get pods -n argocd
+  ---
+    NAME                                               READY   STATUS    RESTARTS   AGE
+    argocd-application-controller-0                    1/1     Running   0          97s
+    argocd-applicationset-controller-8d6865b7f-tmmwq   1/1     Running   0          99s
+    argocd-dex-server-74bbf47cf6-hq4tm                 1/1     Running   0          99s
+    argocd-notifications-controller-84798f79-mqfgh     1/1     Running   0          98s
+    argocd-redis-79db4b8976-4ql7g                      1/1     Running   0          98s
+    argocd-repo-server-5fcf7766cd-wvkt9                1/1     Running   0          98s
+    argocd-server-978b68fb7-m9mh6                      1/1     Running   0          98s
+  
+  # Argo CD와 Github 저장소 연결 상태 확인
+  kubectl get applications -n argocd
+  ---
+  NAME       SYNC STATUS   HEALTH STATUS
+  de-ai-07   OutOfSync     Progressing
+  ---
+  private인 경우 절차 추가로 문서로 제공
+```
+- 현재 상황 체크 
+```
+  # pod 상태 확인
+  kubectl get pods -n de-ai-07
+  ---
+    NAME                   READY   STATUS             RESTARTS       AGE
+    was-769f6bc4d-7w86z    0/1     ImagePullBackOff   0              5m42s
+    was-cd9ccd49f-pdmvj    1/1     Running            0              130m
+    was-cd9ccd49f-xpk52    1/1     Running            0              130m
+    web-557f774fb4-j697p   0/1     ImagePullBackOff   0              5m42s
+    web-59489cc989-jdvhl   1/1     Running            4 (129m ago)   130m
+    web-59489cc989-nxqtc   1/1     Running            4 (129m ago)   130m
+  
+  # Ingress, ALB 주소 체크
+  kubectl get ingress -n de-ai-07
+  ---
+    NAME         CLASS   HOSTS   ADDRESS                                                                 PORTS   AGE
+    public-alb   alb     *       k8s-deai07-publical-db3d79d7f3-1318032631.us-east-2.elb.amazonaws.com   80      108m
+
+  # 현재 클러스터에 배포된 이미지 확인
+  kubectl get deployment web was  -n de-ai-07  -o jsonpath="{range .items[*]}{.metadata.name}{': '}{.spec.template.spec.containers[0].image}{'\n'}{end}"
+  ---
+    web: 827913617635.dkr.ecr.us-east-2.amazonaws.com/de-ai-07-eks-auto-dev/web:dev-latest
+    was: 827913617635.dkr.ecr.us-east-2.amazonaws.com/de-ai-07-eks-auto-dev/was:dev-latest
+```
+
+- CI 저장소 ci.yaml jobs중 `update-cd:` 이하 주석 해제
+  - 아래 2개 변수를 설정
+    - CD_REPOSITORY
+      ```
+        gh variable set CD_REPOSITORY --repo hosose/devops_tf_k8s_ci --body "hosose/devops_tf_k8s_cd"
+      ```
+    - CD_REPOSITORY_TOKEN
+      ```
+        gh auth token | gh secret set CD_REPOSITORY_TOKEN --repo hosose/devops_tf_k8s_ci
+      ```
+```
+gh variable set CD_REPOSITORY --repo hosose/devops_tf_k8s_ci --body "hosose/devops_tf_k8s_cd"
+✓ Created variable CD_REPOSITORY for hosose/devops_tf_k8s_ci
+
+gh auth token | gh secret set CD_REPOSITORY_TOKEN --repo hosose/devops_tf_k8s_ci          
+✓ Set Actions secret CD_REPOSITORY_TOKEN for hosose/devops_tf_k8s_ci
+```      
