@@ -268,3 +268,25 @@ public-alb   alb     *    k8s-deai25-publical-aa59f987ef-214105444.us-east-2.elb
         SITORY_TOKEN --repo jaeyan42/devops_tf_k8s_ci
         ✓ Set Actions secret CD_REPOSITORY_TOKEN for jaeyan42/devops_tf_k8s_ci
       ```
+
+# ArgoCD 대시보드
+  - ./scripts/open-argocd.bat
+  ```
+  Argo CD URL      : https://localhost:8080
+  Argo CD Username : admin
+  Argo CD Password : zO5FtLZd-2p5jQA8
+  ```
+
+# 사이트 접속 
+  ```
+    kubectl describe ingress public-alb -n de-ai-05
+    ---
+    Address : k8s-deai05-publical-e28cd63a5c-956015863.us-east-2.elb.amazonaws.com
+    
+    http://k8s-deai05-publical-e28cd63a5c-956015863.us-east-2.elb.amazonaws.com 접속
+
+    ci쪽에서 개발 push -> 잠시후 접속 -> 반영되어 있다
+    # 쿠버네티스 수정은 CD
+    # 인프라 수정은 CI
+    # 코드 수정 CI
+  ```
