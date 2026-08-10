@@ -1,0 +1,49 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: game-collector
+  labels:
+    app.kubernetes.io/name: game-collector
+    app.kubernetes.io/part-of: de-ai-05
+    app.kubernetes.io/component: backend
+spec:
+  schedule: "*/15 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      # 스케줄 간격(15분)보다 짧게 잡아, 멈춘 실행이 다음 스케줄까지 계속 자리를
+      # 차지하지 않도록 한다 (concurrencyPolicy: Forbid와 함께 이중 안전장치).
+      activeDeadlineSeconds: 840
+
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: game-collector
+            app.kubernetes.io/part-of: de-ai-05
+            app.kubernetes.io/component: backend
+        spec:
+          restartPolicy: Never
+
+          containers:
+            - name: game-collector
+              image: WAS_IMAGE
+              imagePullPolicy: Always
+              # WAS 이미지에 이미 db.py/steam_api.py/collector.py가 같이 들어있어
+              # 별도 이미지 없이 커맨드만 바꿔서 단발 수집 프로세스로 실행한다.
+              command: ["python", "collector.py"]
+
+              envFrom:
+                - secretRef:
+                    name: rds-secret
+
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 128Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
